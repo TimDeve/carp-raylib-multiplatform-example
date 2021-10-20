@@ -1,0 +1,45 @@
+; Raylib needs to be imported first
+; Then the overrides for windows.h
+; Then Core
+(system-include "raylib.h")
+(relative-include "windows-override.h")
+(load "Core.carp")
+
+(Project.config "title" "example-carp")
+(Project.config "output-directory" "carp-out")
+
+(register-type RaylibColor "struct Color" [r Uint8 g Uint8 b Uint8 a Uint8])
+(defmodule RaylibColor
+  (register ray-white RaylibColor "RAYWHITE")
+  (register gray RaylibColor "LIGHTGRAY"))
+
+(defmodule Raylib
+ (register init-window-ptr (Fn [Int Int (Ptr CChar)] ()) "InitWindow")
+ (defn init-window [width height window-name]
+  (init-window-ptr width height (cstr window-name)))
+
+ (register set-target-fps (Fn [Int] ()) "SetTargetFps")
+ (register window-should-close (Fn [] Bool) "WindowShouldClose")
+ (register close-window (Fn [] ()) "CloseWindow")
+ (register begin-drawing (Fn [] ()) "BeginDrawing")
+ (register end-drawing (Fn [] ()) "EndDrawing")
+ (register clear-background (Fn [RaylibColor] ()) "ClearBackground")
+
+ (register draw-text-ptr (Fn [(Ptr CChar) Int Int Int RaylibColor] ()) "DrawText")
+ (defn draw-text [text x y font-size color]
+  (draw-text-ptr (cstr text) x y font-size color)))
+
+(use Raylib)
+(use RaylibColor)
+
+(defn-do main []
+  (init-window 800 450 "Hello world!")
+  (while (not (window-should-close))
+    (do
+      (begin-drawing)
+      (clear-background RaylibColor.ray-white)
+      (draw-text "Congrats! You created your first window!" 190 200 20 RaylibColor.gray)
+      (end-drawing)))
+  (close-window))
+
+
